@@ -86,7 +86,7 @@
 // User-specified version info of this build to display in [Pronterface, etc] terminal window during
 // startup. Implementation of an idea by Prof Braino to inform user that any changes made to this
 // build by the user have been successfully uploaded into firmware.
-#define STRING_CONFIG_H_AUTHOR "(Guti., HICTOP i3 Mendel v1.1.0-RC7BugFix)" // Who made the changes. // GM
+#define STRING_CONFIG_H_AUTHOR "(Guti., HICTOP i3 Mendel v1.1.0-RC8BugFix)" // Who made the changes. // GM
 #define SHOW_BOOTSCREEN
 #define STRING_SPLASH_LINE1 SHORT_BUILD_VERSION // will be shown during bootup in line 1
 #define STRING_SPLASH_LINE2 STRING_DISTRIBUTION_DATE         // will be shown during bootup in line 2 // GM
@@ -492,7 +492,7 @@
  * Override with M92
  *                                      X, Y, Z, E0 [, E1[, E2[, E3]]]
  */
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 398, 456 }  // GM
+#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 398, 418.5 }  // GM
 
 /**
  * Default Max Feed Rate (mm/s)
