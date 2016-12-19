@@ -105,8 +105,8 @@ class Stepper {
     static volatile uint32_t step_events_completed; // The number of step events executed in the current block
 
     #if ENABLED(ADVANCE) || ENABLED(LIN_ADVANCE)
-      static unsigned char old_OCR0A;
-      static volatile unsigned char eISR_Rate;
+      static uint8_t old_OCR0A;
+      static volatile uint8_t eISR_Rate;
       #if ENABLED(LIN_ADVANCE)
         static volatile int e_steps[E_STEPPERS];
         static int final_estep_rate;
@@ -358,7 +358,7 @@ class Stepper {
       acc_step_rate = current_block->initial_rate;
       acceleration_time = calc_timer(acc_step_rate);
       OCR1A = acceleration_time;
-      
+
       #if ENABLED(LIN_ADVANCE)
         if (current_block->use_advance_lead) {
           current_estep_rate[current_block->active_extruder] = ((unsigned long)acc_step_rate * current_block->abs_adv_steps_multiplier8) >> 17;
