@@ -45,6 +45,8 @@
 #define MSG_MAIN                            _UxGT("メイン")                       // "Main"
 #define MSG_AUTOSTART                       _UxGT("ジドウカイシ")                   // "Autostart"
 #define MSG_DISABLE_STEPPERS                _UxGT("モーターデンゲン オフ")            // "Disable steppers"
+#define MSG_DEBUG_MENU                      _UxGT("デバッグメニュー")                // "Debug Menu"
+#define MSG_PROGRESS_BAR_TEST               _UxGT("プログレスバー テスト")            // "Progress Bar Test"
 #define MSG_AUTO_HOME                       _UxGT("ゲンテンフッキ")                  // "Auto home"
 #define MSG_AUTO_HOME_X                     _UxGT("Xジク ゲンテンフッキ")             // "Home X"
 #define MSG_AUTO_HOME_Y                     _UxGT("Yジク ゲンテンフッキ")             // "Home Y"
@@ -120,14 +122,15 @@
 #define MSG_E2STEPS                         _UxGT("E2steps/mm")
 #define MSG_E3STEPS                         _UxGT("E3steps/mm")
 #define MSG_E4STEPS                         _UxGT("E4steps/mm")
+#define MSG_E5STEPS                         _UxGT("E5steps/mm")
 #define MSG_TEMPERATURE                     _UxGT("オンド")                      // "Temperature"
 #define MSG_MOTION                          _UxGT("ウゴキセッテイ")                // "Motion"
 #define MSG_VOLUMETRIC                      _UxGT("フィラメント")                   // "Filament"
 #define MSG_VOLUMETRIC_ENABLED              _UxGT("E in mm3")
 #define MSG_FILAMENT_DIAM                   _UxGT("フィラメントチョッケイ")            // "Fil. Dia."
 #define MSG_CONTRAST                        _UxGT("LCDコントラスト")               // "LCD contrast"
-#define MSG_STORE_EPROM                     _UxGT("メモリヘカクノウ")               // "Store memory"
-#define MSG_LOAD_EPROM                      _UxGT("メモリカラヨミコミ")               // "Load memory"
+#define MSG_STORE_EEPROM                    _UxGT("メモリヘカクノウ")               // "Store memory"
+#define MSG_LOAD_EEPROM                     _UxGT("メモリカラヨミコミ")               // "Load memory"
 #define MSG_RESTORE_FAILSAFE                _UxGT("セッテイリセット")               // "Restore failsafe"
 #define MSG_REFRESH                         _UxGT("リフレッシュ")                  // "Refresh"
 #define MSG_WATCH                           _UxGT("ジョウホウガメン")               // "Info screen"
@@ -149,8 +152,8 @@
 #define MSG_CONTROL_RETRACT_SWAP            _UxGT("ヒキコミリョウS mm")               // "Swap Re.mm"
 #define MSG_CONTROL_RETRACTF                _UxGT("ヒキコミソクド mm/s")             // "Retract  V"
 #define MSG_CONTROL_RETRACT_ZLIFT           _UxGT("ノズルタイヒ mm")                // "Hop mm"
-#define MSG_CONTROL_RETRACT_RECOVER         _UxGT("ホショウリョウ mm")               // "UnRet +mm"
-#define MSG_CONTROL_RETRACT_RECOVER_SWAP    _UxGT("ホショウリョウS mm")              // "S UnRet+mm"
+#define MSG_CONTROL_RETRACT_RECOVER         _UxGT("ホショウリョウ mm")               // "UnRet mm"
+#define MSG_CONTROL_RETRACT_RECOVER_SWAP    _UxGT("ホショウリョウS mm")              // "S UnRet mm"
 #define MSG_CONTROL_RETRACT_RECOVERF        _UxGT("ホショウソクド mm/s")            // "UnRet  V"
 #define MSG_AUTORETRACT                     _UxGT("ジドウヒキコミ")                 // "AutoRetr."
 #define MSG_FILAMENTCHANGE                  _UxGT("フィラメントコウカン")              // "Change filament"
@@ -208,7 +211,7 @@
 #define MSG_INFO_PSU                        _UxGT("デンゲンシュベツ")                // "Power Supply"
 #define MSG_DRIVE_STRENGTH                  _UxGT("モータークドウリョク")              // "Drive Strength"
 #define MSG_DAC_PERCENT                     _UxGT("DACシュツリョク %")               // "Driver %"
-#define MSG_DAC_EEPROM_WRITE                MSG_STORE_EPROM              // "DAC EEPROM Write"
+#define MSG_DAC_EEPROM_WRITE                MSG_STORE_EPROM                     // "DAC EEPROM Write"
 #define MSG_FILAMENT_CHANGE_HEADER          _UxGT("フィラメントコウカン")              // "CHANGE FILAMENT"
 #define MSG_FILAMENT_CHANGE_OPTION_HEADER   _UxGT("ドウサヲセンタクシテクダサイ")        // "CHANGE OPTIONS:"
 #define MSG_FILAMENT_CHANGE_OPTION_EXTRUDE  _UxGT("サラニオシダス")                 // "Extrude more"
