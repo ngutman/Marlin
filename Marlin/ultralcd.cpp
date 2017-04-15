@@ -817,7 +817,7 @@ void kill_screen(const char* lcd_msg) {
    *
    */
 
-  #if DISABLED(NO_WORKSPACE_OFFSETS)
+  #if HAS_M206_COMMAND
     /**
      * Set the home offset based on the current_position
      */
@@ -834,7 +834,7 @@ void kill_screen(const char* lcd_msg) {
       if (lcd_clicked) { defer_return_to_status = false; return lcd_goto_previous_menu(); }
       ENCODER_DIRECTION_NORMAL();
       if (encoderPosition) {
-        int babystep_increment = (int32_t)encoderPosition * (BABYSTEP_MULTIPLICATOR);
+        const int babystep_increment = (int32_t)encoderPosition * (BABYSTEP_MULTIPLICATOR);
         encoderPosition = 0;
         lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
         thermalManager.babystep_axis(axis, babystep_increment);
@@ -850,8 +850,38 @@ void kill_screen(const char* lcd_msg) {
       void lcd_babystep_x() { lcd_goto_screen(_lcd_babystep_x); babysteps_done = 0; defer_return_to_status = true; }
       void lcd_babystep_y() { lcd_goto_screen(_lcd_babystep_y); babysteps_done = 0; defer_return_to_status = true; }
     #endif
-    void _lcd_babystep_z() { _lcd_babystep(Z_AXIS, PSTR(MSG_BABYSTEPPING_Z)); }
-    void lcd_babystep_z() { lcd_goto_screen(_lcd_babystep_z); babysteps_done = 0; defer_return_to_status = true; }
+
+    #if HAS_BED_PROBE
+
+      void lcd_babystep_zoffset() {
+        if (lcd_clicked) { defer_return_to_status = false; return lcd_goto_previous_menu(); }
+        defer_return_to_status = true;
+        ENCODER_DIRECTION_NORMAL();
+        if (encoderPosition) {
+          const int babystep_increment = (int32_t)encoderPosition * (BABYSTEP_MULTIPLICATOR);
+          encoderPosition = 0;
+
+          const float new_zoffset = zprobe_zoffset + planner.steps_to_mm[Z_AXIS] * babystep_increment;
+          if (WITHIN(new_zoffset, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX)) {
+
+            if (planner.abl_enabled)
+              thermalManager.babystep_axis(Z_AXIS, babystep_increment);
+
+            zprobe_zoffset = new_zoffset;
+            refresh_zprobe_zoffset(true);
+            lcdDrawUpdate = LCDVIEW_REDRAW_NOW;
+          }
+        }
+        if (lcdDrawUpdate)
+          lcd_implementation_drawedit(PSTR(MSG_ZPROBE_ZOFFSET), ftostr43sign(zprobe_zoffset));
+      }
+
+    #else // !HAS_BED_PROBE
+
+      void _lcd_babystep_z() { _lcd_babystep(Z_AXIS, PSTR(MSG_BABYSTEPPING_Z)); }
+      void lcd_babystep_z() { lcd_goto_screen(_lcd_babystep_z); babysteps_done = 0; defer_return_to_status = true; }
+
+    #endif // HAS_BED_PROBE
 
   #endif //BABYSTEPPING
 
@@ -885,12 +915,12 @@ void kill_screen(const char* lcd_msg) {
     }
 
     void _lcd_mesh_edit() {
-      _lcd_mesh_fine_tune(PSTR("Mesh Editor: "));
+      _lcd_mesh_fine_tune(PSTR("Mesh Editor"));
     }
 
     float lcd_mesh_edit() {
       lcd_goto_screen(_lcd_mesh_edit_NOP);
-      _lcd_mesh_fine_tune(PSTR("Mesh Editor: "));
+      _lcd_mesh_fine_tune(PSTR("Mesh Editor"));
       return mesh_edit_value;
     }
 
@@ -1056,8 +1086,10 @@ void kill_screen(const char* lcd_msg) {
       #if ENABLED(BABYSTEP_XY)
         MENU_ITEM(submenu, MSG_BABYSTEP_X, lcd_babystep_x);
         MENU_ITEM(submenu, MSG_BABYSTEP_Y, lcd_babystep_y);
-      #endif //BABYSTEP_XY
-      MENU_ITEM(submenu, MSG_BABYSTEP_Z, lcd_babystep_z);
+      #endif
+      #if DISABLED(BABYSTEP_ZPROBE_OFFSET)
+        MENU_ITEM(submenu, MSG_BABYSTEP_Z, lcd_babystep_z);
+      #endif
     #endif
 
     //
@@ -1640,7 +1672,7 @@ void kill_screen(const char* lcd_msg) {
 
     #endif
 
-    #if DISABLED(NO_WORKSPACE_OFFSETS)
+    #if HAS_M206_COMMAND
       //
       // Set Home Offsets
       //
@@ -1738,14 +1770,20 @@ void kill_screen(const char* lcd_msg) {
       lcd_goto_screen(_lcd_calibrate_homing);
     }
 
+    #if ENABLED(DELTA_AUTO_CALIBRATION)
+      #define _DELTA_TOWER_MOVE_RADIUS DELTA_CALIBRATION_RADIUS
+    #else
+      #define _DELTA_TOWER_MOVE_RADIUS DELTA_PRINTABLE_RADIUS
+    #endif
+
     // Move directly to the tower position with uninterpolated moves
     // If we used interpolated moves it would cause this to become re-entrant
     void _goto_tower_pos(const float &a) {
       current_position[Z_AXIS] = max(Z_HOMING_HEIGHT, Z_CLEARANCE_BETWEEN_PROBES) + (DELTA_PRINTABLE_RADIUS) / 5;
       line_to_current(Z_AXIS);
 
-      current_position[X_AXIS] = a < 0 ? X_HOME_POS : sin(a) * -(DELTA_PRINTABLE_RADIUS);
-      current_position[Y_AXIS] = a < 0 ? Y_HOME_POS : cos(a) *  (DELTA_PRINTABLE_RADIUS);
+      current_position[X_AXIS] = a < 0 ? LOGICAL_X_POSITION(X_HOME_POS) : sin(a) * -(_DELTA_TOWER_MOVE_RADIUS);
+      current_position[Y_AXIS] = a < 0 ? LOGICAL_Y_POSITION(Y_HOME_POS) : cos(a) *  (_DELTA_TOWER_MOVE_RADIUS);
       line_to_current(Z_AXIS);
 
       current_position[Z_AXIS] = 4.0;
@@ -1765,6 +1803,10 @@ void kill_screen(const char* lcd_msg) {
     void lcd_delta_calibrate_menu() {
       START_MENU();
       MENU_BACK(MSG_MAIN);
+      #if ENABLED(DELTA_AUTO_CALIBRATION)
+        MENU_ITEM(gcode, MSG_DELTA_AUTO_CALIBRATE, PSTR("G33 C"));
+        MENU_ITEM(gcode, MSG_DELTA_HEIGHT_CALIBRATE, PSTR("G33 C1"));
+      #endif
       MENU_ITEM(submenu, MSG_AUTO_HOME, _lcd_delta_calibrate_home);
       if (axis_homed[Z_AXIS]) {
         MENU_ITEM(submenu, MSG_DELTA_CALIBRATE_X, _goto_tower_x);
@@ -1940,8 +1982,7 @@ void kill_screen(const char* lcd_msg) {
       }
     }
     MENU_BACK(MSG_MOVE_AXIS);
-    if (axis == X_AXIS || axis == Y_AXIS)
-      MENU_ITEM(submenu, MSG_MOVE_10MM, lcd_move_menu_10mm);
+    MENU_ITEM(submenu, MSG_MOVE_10MM, lcd_move_menu_10mm);
     MENU_ITEM(submenu, MSG_MOVE_1MM, lcd_move_menu_1mm);
     MENU_ITEM(submenu, MSG_MOVE_01MM, lcd_move_menu_01mm);
     END_MENU();
@@ -2375,11 +2416,17 @@ void kill_screen(const char* lcd_msg) {
    * "Control" > "Motion" submenu
    *
    */
+  #if HAS_BED_PROBE && DISABLED(BABYSTEP_ZPROBE_OFFSET)
+    static void lcd_refresh_zprobe_zoffset() { refresh_zprobe_zoffset(); }
+  #endif
+
   void lcd_control_motion_menu() {
     START_MENU();
     MENU_BACK(MSG_CONTROL);
-    #if HAS_BED_PROBE
-      MENU_ITEM_EDIT(float32, MSG_ZPROBE_ZOFFSET, &zprobe_zoffset, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX);
+    #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
+      MENU_ITEM(submenu, MSG_ZPROBE_ZOFFSET, lcd_babystep_zoffset);
+    #elif HAS_BED_PROBE
+      MENU_ITEM_EDIT_CALLBACK(float32, MSG_ZPROBE_ZOFFSET, &zprobe_zoffset, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX, lcd_refresh_zprobe_zoffset);
     #endif
     // Manual bed leveling, Bed Z:
     #if ENABLED(MESH_BED_LEVELING) && ENABLED(LCD_BED_LEVELING)

@@ -70,8 +70,8 @@
 //===========================================================================
 //============================= DELTA Printer ===============================
 //===========================================================================
-// For a Delta printer replace the configuration files with the files in the
-// example_configurations/delta directory.
+// For Delta printers start with one of the configuration files in the
+// example_configurations/delta directory and customize for your machine.
 //
 
 //===========================================================================
@@ -597,6 +597,9 @@
  *   This applies to the HOMING_FEEDRATE_Z and Z_PROBE_SPEED_FAST.  If PROBE_DOUBLE_TOUCH
  *   is enabled then it also applies to Z_PROBE_SPEED_SLOW.
  */
+
+// A probe that is deployed and stowed with a solenoid pin (SOL1_PIN)
+//#define SOLENOID_PROBE
 
 // Enable if you have a Z probe mounted on a sled like those designed by Charles Bell.
 //#define Z_PROBE_SLED
@@ -1521,10 +1524,27 @@
 
 // Support for an RGB LED using 3 separate pins with optional PWM
 //#define RGB_LED
-#if ENABLED(RGB_LED)
+//#define RGBW_LED
+#if ENABLED(RGB_LED) || ENABLED(RGBW_LED)
   #define RGB_LED_R_PIN 34
   #define RGB_LED_G_PIN 43
   #define RGB_LED_B_PIN 35
+  #define RGB_LED_W_PIN -1
+#endif
+
+/**
+ * Printer Event LEDs
+ *
+ * During printing, the LEDs will reflect the printer status:
+ *
+ *  - Gradually change from blue to violet as the heated bed gets to target temp
+ *  - Gradually change from violet to red as the hotend gets to temperature
+ *  - Change to white to illuminate work surface
+ *  - Change to green once print has finished
+ *  - Turn off after the print has finished and the user has pushed a button
+ */
+#if ENABLED(BLINKM) || ENABLED(RGB_LED) || ENABLED(RGBW_LED)
+  #define PRINTER_EVENT_LEDS
 #endif
 
 /*********************************************************************\
