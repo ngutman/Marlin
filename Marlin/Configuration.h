@@ -630,9 +630,9 @@
 #define XY_PROBE_SPEED 8000
 
 // Speed for the first approach when double-probing (with PROBE_DOUBLE_TOUCH)
-#define Z_PROBE_SPEED_FAST (HOMING_FEEDRATE_Z / 2)
+#define Z_PROBE_SPEED_FAST (HOMING_FEEDRATE_Z)
 // Speed for the "accurate" probe of each point
-#define Z_PROBE_SPEED_SLOW (HOMING_FEEDRATE_Z / 4)
+#define Z_PROBE_SPEED_SLOW (HOMING_FEEDRATE_Z / 2)
 // Use double touch for probing
 //#define PROBE_DOUBLE_TOUCH
 
@@ -845,9 +845,9 @@
  *   With an LCD controller the process is guided step-by-step.
  */
 //#define AUTO_BED_LEVELING_3POINT
-#define AUTO_BED_LEVELING_LINEAR
+// #define AUTO_BED_LEVELING_LINEAR
 //#define AUTO_BED_LEVELING_BILINEAR
-//#define AUTO_BED_LEVELING_UBL
+#define AUTO_BED_LEVELING_UBL
 //#define MESH_BED_LEVELING
 
 /**
@@ -914,13 +914,13 @@
   //===========================================================================
 
   #define UBL_MESH_INSET 1          // Mesh inset margin on print area
-  #define GRID_MAX_POINTS_X 10      // Don't use more than 15 points per axis, implementation limited.
+  #define GRID_MAX_POINTS_X 5      // Don't use more than 15 points per axis, implementation limited.
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
   #define UBL_PROBE_PT_1_X 39       // These set the probe locations for when UBL does a 3-Point leveling
   #define UBL_PROBE_PT_1_Y 180      // of the mesh.
   #define UBL_PROBE_PT_2_X 39
   #define UBL_PROBE_PT_2_Y 20
-  #define UBL_PROBE_PT_3_X 180
+  #define UBL_PROBE_PT_3_X 142
   #define UBL_PROBE_PT_3_Y 20
   //#define UBL_G26_MESH_EDITING    // Enable G26 mesh editing
 
