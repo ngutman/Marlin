@@ -601,24 +601,12 @@
 //#define Z_ENDSTOP_SERVO_NR 0   // Defaults to SERVO 0 connector.
 //#define Z_SERVO_ANGLES {70,0}  // Z Servo Deploy and Stow angles
 
-<<<<<<< HEAD
- /**
- *   The BLTouch probe emulates a servo probe.
- *   If using a BLTouch then NUM_SERVOS, Z_ENDSTOP_SERVO_NR and Z_SERVO_ANGLES
- *   are setup for you in the background and you shouldn't need to set/modify/enable them
- *   with the possible exception of Z_ENDSTOP_SERVO_NR.
- */
-#define BLTOUCH
-//#define BLTOUCH_DELAY 375 // (ms) Enable and increase if needed
-
-=======
->>>>>>> 68c969350312543a255adba43f6e898fb7632c60
 /**
  * The BLTouch probe is a Hall effect sensor that emulates a servo.
  */
-//#define BLTOUCH
+#define BLTOUCH
 #if ENABLED(BLTOUCH)
-  //#define BLTOUCH_DELAY 375   // (ms) Enable and increase if needed
+  #define BLTOUCH_DELAY 375   // (ms) Enable and increase if needed
   //#define BLTOUCH_HEATERS_OFF // Enable if the probe seems unreliable. Heaters will be disabled for each probe.
 #endif
 
@@ -667,72 +655,6 @@
 //#define PROBE_DOUBLE_TOUCH
 
 /**
-<<<<<<< HEAD
- *   Allen Key Probe is defined in the Delta example configurations.
- *
- *
- *   *** PLEASE READ ALL INSTRUCTIONS BELOW FOR SAFETY! ***
- *
- *   - RAMPS 1.3/1.4 boards may be able to use the 5V, GND, and Aux4->D32 pin.
- *   - Use 5V for powered (usu. inductive) sensors.
- *   - Otherwise connect:
- *     - normally-closed switches to GND and D32.
- *     - normally-open switches to 5V and D32.
- *
- *   Normally-closed switches are advised and are the default.
- *
- *
- *   PIN OPTIONS\SETUP FOR Z PROBES
- *
- *
- *   WARNING:
- *   Setting the wrong pin may have unexpected and potentially disastrous consequences.
- *   Use with caution and do your homework.
- *
- *
- *   All Z PROBE pin options are configured by defining (or not defining)
- *   the following five items:
- *       Z_MIN_PROBE_ENDSTOP – defined below
- *       Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN – defined below
- *       Z_MIN_PIN - defined in the pins_YOUR_BOARD.h file
- *       Z_MIN_PROBE_PIN - defined in the pins_YOUR_BOARD.h file
- *
- *   If you're using a probe then you need to tell Marlin which pin to use as
- *   the Z MIN ENDSTOP.  Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN determines if the
- *   Z_MIN_PIN or if the Z_MIN_PROBE_PIN is used.
- *
- *   The pin selected for the probe is ONLY checked during probing operations.
- *   If you want to use the Z_MIN_PIN as an endstop AND you want to have a Z PROBE
- *   then you’ll need to use the Z_MIN_PROBE_PIN option.
- *
- *   Z_MIN_PROBE_ENDSTOP also needs to be enabled if you want to use Z_MIN_PROBE_PIN.
- *
- *   The settings needed to use the Z_MIN_PROBE_PIN are:
- *       1. select the type of probe you're using
- *       2. define Z_MIN_PROBE_PIN in your pins_YOUR_BOARD.h file
- *       3. disable Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
- *       4. enable Z_MIN_PROBE_ENDSTOP
- *   NOTE – if Z_MIN_PIN is defined then it’ll be checked during all moves in the
- *          negative Z direction.
- *
- *   The settings needed to use the Z_MIN_PIN are:
- *       1. select the type of probe you're using
- *       2. enable Z_MIN _PIN in your pins_YOUR_BOARD.h file
- *       3. enable Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
- *       4. disable Z_MIN_PROBE_ENDSTOP
- *   NOTES – if Z_MIN_PROBE_PIN is defined in the pins_YOUR_BOARD.h file then it’ll be
- *          ignored by Marlin
- */
-
-//#define Z_MIN_PROBE_ENDSTOP
-#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
-
-// Enable Z Probe Repeatability test to see how accurate your probe is
-#define Z_MIN_PROBE_REPEATABILITY_TEST
-
-/**
-=======
->>>>>>> 68c969350312543a255adba43f6e898fb7632c60
  * Z probes require clearance when deploying, stowing, and moving between
  * probe points to avoid hitting the bed and other hardware.
  * Servo-mounted probes require extra space for the arm to rotate.
@@ -754,7 +676,7 @@
 #define Z_PROBE_OFFSET_RANGE_MAX 20
 
 // Enable the M48 repeatability test to test probe accuracy
-//#define Z_MIN_PROBE_REPEATABILITY_TEST
+#define Z_MIN_PROBE_REPEATABILITY_TEST
 
 // For Inverting Stepper Enable Pins (Active Low) use 0, Non Inverting (Active High) use 1
 // :{ 0:'Low', 1:'High' }
