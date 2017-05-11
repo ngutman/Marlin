@@ -881,7 +881,7 @@
   #define UBL_PROBE_PT_2_Y 20
   #define UBL_PROBE_PT_3_X 142
   #define UBL_PROBE_PT_3_Y 20
-  //#define UBL_G26_MESH_EDITING    // Enable G26 mesh editing
+  #define UBL_G26_MESH_EDITING    // Enable G26 mesh editing
 
 #elif ENABLED(MESH_BED_LEVELING)
 
