@@ -50,6 +50,10 @@
 
 #include <U8glib.h>
 
+#if ENABLED(AUTO_BED_LEVELING_UBL)
+  #include "ubl.h"
+#endif
+
 #if ENABLED(SHOW_BOOTSCREEN) && ENABLED(SHOW_CUSTOM_BOOTSCREEN)
   #include "_Bootscreen.h"
 #endif
@@ -239,19 +243,17 @@ char lcd_print_and_count(const char c) {
  * On DOGM all strings go through a filter for utf
  * But only use lcd_print_utf and lcd_printPGM_utf for translated text
  */
-void lcd_print(const char* const str) { for (uint8_t i = 0; char c = str[i]; ++i) lcd_print(c); }
-void lcd_printPGM(const char* str) { for (; char c = pgm_read_byte(str); ++str) lcd_print(c); }
+void lcd_print(const char *str) { while (*str) lcd_print(*str++); }
+void lcd_printPGM(const char *str) { while (const char c = pgm_read_byte(str)) lcd_print(c), ++str; }
 
-void lcd_print_utf(const char* const str, const uint8_t maxLength=LCD_WIDTH) {
+void lcd_print_utf(const char *str, uint8_t n=LCD_WIDTH) {
   char c;
-  for (uint8_t i = 0, n = maxLength; n && (c = str[i]); ++i)
-    n -= charset_mapper(c);
+  while (n && (c = *str)) n -= charset_mapper(c), ++str;
 }
 
-void lcd_printPGM_utf(const char* str, const uint8_t maxLength=LCD_WIDTH) {
+void lcd_printPGM_utf(const char *str, uint8_t n=LCD_WIDTH) {
   char c;
-  for (uint8_t i = 0, n = maxLength; n && (c = str[i]); ++i)
-    n -= charset_mapper(c);
+  while (n && (c = pgm_read_byte(str))) n -= charset_mapper(c), ++str;
 }
 
 // Initialize or re-initialize the LCD
@@ -359,7 +361,7 @@ FORCE_INLINE void _draw_heater_status(const uint8_t x, const int8_t heater, cons
   #endif
 
   if (PAGE_UNDER(7)) {
-    #if ENABLED(ADVANCED_PAUSE_FEATURE)
+    #if HEATER_IDLE_HANDLER
       const bool is_idle = (!isBed ? thermalManager.is_heater_idle(heater) :
       #if HAS_TEMP_BED
         thermalManager.is_bed_idle()
@@ -408,12 +410,33 @@ FORCE_INLINE void _draw_axis_label(const AxisEnum axis, const char* const pstr, 
 
 inline void lcd_implementation_status_message() {
   #if ENABLED(STATUS_MESSAGE_SCROLLING)
-    lcd_print_utf(lcd_status_message + status_scroll_pos);
+    static bool last_blink = false;
     const uint8_t slen = lcd_strlen(lcd_status_message);
-    if (slen > LCD_WIDTH) {
-      // Skip any non-printing bytes
-      while (!charset_mapper(lcd_status_message[status_scroll_pos])) ++status_scroll_pos;
-      if (++status_scroll_pos > slen - LCD_WIDTH) status_scroll_pos = 0;
+    const char *stat = lcd_status_message + status_scroll_pos;
+    if (slen <= LCD_WIDTH)
+      lcd_print_utf(stat);                                      // The string isn't scrolling
+    else {
+      if (status_scroll_pos <= slen - LCD_WIDTH)
+        lcd_print_utf(stat);                                    // The string fills the screen
+      else {
+        uint8_t chars = LCD_WIDTH;
+        if (status_scroll_pos < slen) {                         // First string still visible
+          lcd_print_utf(stat);                                  // The string leaves space
+          chars -= slen - status_scroll_pos;                    // Amount of space left
+        }
+        lcd.print('.');                                         // Always at 1+ spaces left, draw a dot
+        if (--chars) {
+          if (status_scroll_pos < slen + 1)                     // Draw a second dot if there's space
+            --chars, lcd.print('.');
+          if (chars) lcd_print_utf(lcd_status_message, chars);  // Print a second copy of the message
+        }
+      }
+      if (last_blink != blink) {
+        last_blink = blink;
+        // Skip any non-printing bytes
+        if (status_scroll_pos < slen) while (!PRINTABLE(lcd_status_message[status_scroll_pos])) status_scroll_pos++;
+        if (++status_scroll_pos >= slen + 2) status_scroll_pos = 0;
+      }
     }
   #else
     lcd_print_utf(lcd_status_message);
@@ -424,7 +447,7 @@ inline void lcd_implementation_status_message() {
 
 static void lcd_implementation_status_screen() {
 
-  bool blink = lcd_blink();
+  const bool blink = lcd_blink();
 
   // Status Menu Font
   lcd_setFont(FONT_STATUSMENU);
@@ -706,7 +729,9 @@ static void lcd_implementation_status_screen() {
       lcd_print(' ');
       lcd_print(itostr3(thermalManager.degHotend(active_extruder)));
       lcd_print('/');
-      lcd_print(itostr3(thermalManager.degTargetHotend(active_extruder)));
+
+      if (lcd_blink() || !thermalManager.is_heater_idle(active_extruder))
+        lcd_print(itostr3(thermalManager.degTargetHotend(active_extruder)));
     }
 
   #endif // ADVANCED_PAUSE_FEATURE
