@@ -5055,6 +5055,8 @@ void home_all_axes() { gcode_G28(true); }
 
         bool zig = PR_OUTER_END & 1;  // Always end at RIGHT and BACK_PROBE_BED_POSITION
 
+        measured_z = 0;
+
         // Outer loop is Y with PROBE_Y_FIRST disabled
         for (uint8_t PR_OUTER_VAR = 0; PR_OUTER_VAR < PR_OUTER_END && !isnan(measured_z); PR_OUTER_VAR++) {
 
@@ -8705,8 +8707,8 @@ inline void gcode_M117() { lcd_setstatus(parser.string_arg); }
 /**
  * M118: Display a message in the host console.
  *
- *  A  Append '// ' for an action command, as in OctoPrint
- *  E  Have the host 'echo:' the text
+ *  A1  Append '// ' for an action command, as in OctoPrint
+ *  E1  Have the host 'echo:' the text
  */
 inline void gcode_M118() {
   if (parser.boolval('E')) SERIAL_ECHO_START();
@@ -9965,7 +9967,7 @@ void quickstop_stepper() {
                hasQ = !hasZ && parser.seen('Q');
 
     if (hasC) {
-      const mesh_index_pair location = ubl.find_closest_mesh_point_of_type(REAL, current_position[X_AXIS], current_position[Y_AXIS], USE_NOZZLE_AS_REFERENCE, NULL, false);
+      const mesh_index_pair location = ubl.find_closest_mesh_point_of_type(REAL, current_position[X_AXIS], current_position[Y_AXIS], USE_NOZZLE_AS_REFERENCE, NULL);
       ix = location.x_index;
       iy = location.y_index;
     }
@@ -10965,7 +10967,7 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
 
           #if ENABLED(PARKING_EXTRUDER) // Dual Parking extruder
             const float z_diff = hotend_offset[Z_AXIS][active_extruder] - hotend_offset[Z_AXIS][tmp_extruder];
-            float z_raise = 0;
+            float z_raise = PARKING_EXTRUDER_SECURITY_RAISE;
             if (!no_move) {
 
               const float parkingposx[] = PARKING_EXTRUDER_PARKING_X,
@@ -10988,7 +10990,6 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
                 SERIAL_ECHOLNPGM("Starting Autopark");
                 if (DEBUGGING(LEVELING)) DEBUG_POS("current position:", current_position);
               #endif
-              z_raise = PARKING_EXTRUDER_SECURITY_RAISE;
               current_position[Z_AXIS] += z_raise;
               #if ENABLED(DEBUG_LEVELING_FEATURE)
                 SERIAL_ECHOLNPGM("(1) Raise Z-Axis ");
@@ -12652,7 +12653,7 @@ void set_current_from_steppers_for_axis(const AxisEnum axis) {
 
 #elif ENABLED(AUTO_BED_LEVELING_BILINEAR) && !IS_KINEMATIC
 
-  #define CELL_INDEX(A,V) ((RAW_##A##_POSITION(V) - bilinear_start[A##_AXIS]) * ABL_BG_FACTOR(A##_AXIS))
+  #define CELL_INDEX(A,V) ((V - bilinear_start[A##_AXIS]) * ABL_BG_FACTOR(A##_AXIS))
 
   /**
    * Prepare a bilinear-leveled linear move on Cartesian,
@@ -12849,24 +12850,28 @@ void set_current_from_steppers_for_axis(const AxisEnum axis) {
    * Returns true if current_position[] was set to destination[]
    */
   inline bool prepare_move_to_destination_cartesian() {
-    if (current_position[X_AXIS] != destination[X_AXIS] || current_position[Y_AXIS] != destination[Y_AXIS]) {
-      const float fr_scaled = MMS_SCALED(feedrate_mm_s);
+    const float fr_scaled = MMS_SCALED(feedrate_mm_s);
       #if HAS_MESH
-        if (planner.leveling_active) {
-          #if ENABLED(AUTO_BED_LEVELING_UBL)
-            ubl.line_to_destination_cartesian(fr_scaled, active_extruder);
-          #elif ENABLED(MESH_BED_LEVELING)
-            mesh_line_to_destination(fr_scaled);
-          #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
-            bilinear_line_to_destination(fr_scaled);
-          #endif
-          return true;
+        if (!planner.leveling_active) {
+          line_to_destination(fr_scaled);
+          return false;
         }
+        #if ENABLED(AUTO_BED_LEVELING_UBL)
+          ubl.line_to_destination_cartesian(fr_scaled, active_extruder);  // UBL's motion routine needs to know about all moves,
+          return true;                                                    // even purely Z-Axis moves
+        #else
+          if (current_position[X_AXIS] != destination[X_AXIS] || current_position[Y_AXIS] != destination[Y_AXIS]) {
+            #if ENABLED(MESH_BED_LEVELING)
+              mesh_line_to_destination(fr_scaled);
+            #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
+              bilinear_line_to_destination(fr_scaled);
+            #endif
+            return true;
+          }
+          else
+            line_to_destination();
+        #endif
       #endif // HAS_MESH
-      line_to_destination(fr_scaled);
-    }
-    else
-      line_to_destination();
 
     return false;
   }
@@ -13022,6 +13027,7 @@ void prepare_move_to_destination() {
     #if ENABLED(CNC_WORKSPACE_PLANES)
       AxisEnum p_axis, q_axis, l_axis;
       switch (workspace_plane) {
+        default:
         case PLANE_XY: p_axis = X_AXIS; q_axis = Y_AXIS; l_axis = Z_AXIS; break;
         case PLANE_ZX: p_axis = Z_AXIS; q_axis = X_AXIS; l_axis = Y_AXIS; break;
         case PLANE_YZ: p_axis = Y_AXIS; q_axis = Z_AXIS; l_axis = X_AXIS; break;
